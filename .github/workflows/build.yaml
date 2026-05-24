@@ -17,34 +17,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download patched Godot editor
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Download V-Sekai Godot editor
         run: |
-          # Extract the editor binary from the ghcr.io OCI image using
-          # crane (no docker daemon needed — works inside containers
-          # where docker.sock isn't accessible).
-          CRANE_VERSION=v0.20.3
-          curl -fsSL "https://github.com/google/go-containerregistry/releases/download/${CRANE_VERSION}/go-containerregistry_Linux_x86_64.tar.gz" | tar -xz crane
-          chmod +x crane
-
-          echo "$GH_TOKEN" | ./crane auth login ghcr.io -u token --password-stdin
-
-          mkdir -p /tmp/godot-editor /tmp/godot-image
-          ./crane export ghcr.io/v-sekai-multiplayer-fabric/godot-editor-double:latest /tmp/godot-image/fs.tar
-          # Find the editor binary inside the exported filesystem.
-          tar tf /tmp/godot-image/fs.tar | grep -iE 'godot.*editor|godot.*linuxbsd|godot$' | head -10
-          # Extract it (try common paths).
-          tar xf /tmp/godot-image/fs.tar -C /tmp/godot-editor \
-            --strip-components=3 usr/local/bin/godot 2>/dev/null || \
-          tar xf /tmp/godot-image/fs.tar -C /tmp/godot-editor \
-            --wildcards '*/godot.linuxbsd.editor*' --strip-components=99 2>/dev/null || \
-          { echo "=== Editor not at expected path. Files matching 'godot': ===";
-            tar tf /tmp/godot-image/fs.tar | grep -i godot | head -20; exit 1; }
-          chmod +x /tmp/godot-editor/godot
+          # Use the public V-Sekai/world-godot Linux editor release.
+          # For Phase 0 (build pipeline) the multiplayer_fabric module
+          # isn't needed. Phase 1+ will switch to the patched engine
+          # once the ghcr.io package is made public.
+          mkdir -p /tmp/godot-editor
+          curl -fsSL -o /tmp/godot-editor/editor.zip \
+            "https://github.com/V-Sekai/world-godot/releases/download/latest.v-sekai-editor-281/v-sekai-godot-linuxbsd.zip"
+          cd /tmp/godot-editor && unzip -o editor.zip && rm editor.zip
+          # Find the editor binary
+          EDITOR=$(find . -name 'godot*' -type f -executable | head -1)
+          if [ -z "$EDITOR" ]; then
+            EDITOR=$(find . -name 'godot*' -type f | head -1)
+            chmod +x "$EDITOR"
+          fi
+          ln -sf "$EDITOR" /tmp/godot-editor/godot
           ls -la /tmp/godot-editor/
           /tmp/godot-editor/godot --version || true
-          rm -rf /tmp/godot-image ./crane
 
       - name: Import project
         run: |
