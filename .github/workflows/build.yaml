@@ -19,24 +19,28 @@ jobs:
 
       - name: Download patched Godot editor
         run: |
-          # The multiplayer-fabric Godot editor (double precision, with
-          # the multiplayer_fabric module baked in). Built by
-          # v-sekai-multiplayer-fabric/godot-images.
-          #
-          # Use `docker` (not `podman`) because the runner container's
-          # filesystem is overlayfs-on-overlayfs, and podman can't use
-          # the overlay driver there. `docker` talks to the HOST's
-          # podman via the mounted socket, which has a real filesystem.
-          mkdir -p /tmp/godot-editor
-          sudo docker pull ghcr.io/v-sekai-multiplayer-fabric/godot-editor-double:latest
-          CID=$(sudo docker create ghcr.io/v-sekai-multiplayer-fabric/godot-editor-double:latest)
-          sudo docker cp "$CID:/usr/local/bin/godot" /tmp/godot-editor/godot 2>/dev/null || \
-            sudo docker cp "$CID:/godot/bin/godot.linuxbsd.editor.double.x86_64" /tmp/godot-editor/godot 2>/dev/null || \
-            { echo "=== Could not find editor. Listing container FS ==="; sudo docker export "$CID" | tar t | grep -i godot | head -20; exit 1; }
-          sudo docker rm "$CID"
+          # Extract the editor binary from the ghcr.io OCI image using
+          # crane (no docker daemon needed — works inside containers
+          # where docker.sock isn't accessible).
+          CRANE_VERSION=v0.20.3
+          curl -fsSL "https://github.com/google/go-containerregistry/releases/download/${CRANE_VERSION}/go-containerregistry_Linux_x86_64.tar.gz" | tar -xz crane
+          chmod +x crane
+
+          mkdir -p /tmp/godot-editor /tmp/godot-image
+          ./crane export ghcr.io/v-sekai-multiplayer-fabric/godot-editor-double:latest /tmp/godot-image/fs.tar
+          # Find the editor binary inside the exported filesystem.
+          tar tf /tmp/godot-image/fs.tar | grep -iE 'godot.*editor|godot.*linuxbsd|godot$' | head -10
+          # Extract it (try common paths).
+          tar xf /tmp/godot-image/fs.tar -C /tmp/godot-editor \
+            --strip-components=3 usr/local/bin/godot 2>/dev/null || \
+          tar xf /tmp/godot-image/fs.tar -C /tmp/godot-editor \
+            --wildcards '*/godot.linuxbsd.editor*' --strip-components=99 2>/dev/null || \
+          { echo "=== Editor not at expected path. Files matching 'godot': ===";
+            tar tf /tmp/godot-image/fs.tar | grep -i godot | head -20; exit 1; }
           chmod +x /tmp/godot-editor/godot
           ls -la /tmp/godot-editor/
           /tmp/godot-editor/godot --version || true
+          rm -rf /tmp/godot-image ./crane
 
       - name: Import project
         run: |
