@@ -28,12 +28,12 @@ jobs:
           # the overlay driver there. `docker` talks to the HOST's
           # podman via the mounted socket, which has a real filesystem.
           mkdir -p /tmp/godot-editor
-          docker pull ghcr.io/v-sekai-multiplayer-fabric/godot-editor-double:latest
-          CID=$(docker create ghcr.io/v-sekai-multiplayer-fabric/godot-editor-double:latest)
-          docker cp "$CID:/usr/local/bin/godot" /tmp/godot-editor/godot 2>/dev/null || \
-            docker cp "$CID:/godot/bin/godot.linuxbsd.editor.double.x86_64" /tmp/godot-editor/godot 2>/dev/null || \
-            { echo "=== Could not find editor. Listing container FS ==="; docker export "$CID" | tar t | grep -i godot | head -20; exit 1; }
-          docker rm "$CID"
+          sudo docker pull ghcr.io/v-sekai-multiplayer-fabric/godot-editor-double:latest
+          CID=$(sudo docker create ghcr.io/v-sekai-multiplayer-fabric/godot-editor-double:latest)
+          sudo docker cp "$CID:/usr/local/bin/godot" /tmp/godot-editor/godot 2>/dev/null || \
+            sudo docker cp "$CID:/godot/bin/godot.linuxbsd.editor.double.x86_64" /tmp/godot-editor/godot 2>/dev/null || \
+            { echo "=== Could not find editor. Listing container FS ==="; sudo docker export "$CID" | tar t | grep -i godot | head -20; exit 1; }
+          sudo docker rm "$CID"
           chmod +x /tmp/godot-editor/godot
           ls -la /tmp/godot-editor/
           /tmp/godot-editor/godot --version || true
