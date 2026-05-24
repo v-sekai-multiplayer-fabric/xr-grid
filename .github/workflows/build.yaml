@@ -22,16 +22,21 @@ jobs:
           # The multiplayer-fabric Godot editor (double precision, with
           # the multiplayer_fabric module baked in). Built by
           # v-sekai-multiplayer-fabric/godot-images.
+          #
+          # Use `docker` (not `podman`) because the runner container's
+          # filesystem is overlayfs-on-overlayfs, and podman can't use
+          # the overlay driver there. `docker` talks to the HOST's
+          # podman via the mounted socket, which has a real filesystem.
           mkdir -p /tmp/godot-editor
-          podman pull ghcr.io/v-sekai-multiplayer-fabric/godot-editor-double:latest
-          # Extract the editor binary from the container image.
-          CID=$(podman create ghcr.io/v-sekai-multiplayer-fabric/godot-editor-double:latest)
-          podman cp "$CID:/usr/local/bin/godot" /tmp/godot-editor/godot || \
-            podman cp "$CID:/godot/bin/godot.linuxbsd.editor.double.x86_64" /tmp/godot-editor/godot || \
-            echo "WARN: could not find editor binary; listing container root" && podman cp "$CID:/" /tmp/godot-editor-dump
-          podman rm "$CID"
-          chmod +x /tmp/godot-editor/godot || true
+          docker pull ghcr.io/v-sekai-multiplayer-fabric/godot-editor-double:latest
+          CID=$(docker create ghcr.io/v-sekai-multiplayer-fabric/godot-editor-double:latest)
+          docker cp "$CID:/usr/local/bin/godot" /tmp/godot-editor/godot 2>/dev/null || \
+            docker cp "$CID:/godot/bin/godot.linuxbsd.editor.double.x86_64" /tmp/godot-editor/godot 2>/dev/null || \
+            { echo "=== Could not find editor. Listing container FS ==="; docker export "$CID" | tar t | grep -i godot | head -20; exit 1; }
+          docker rm "$CID"
+          chmod +x /tmp/godot-editor/godot
           ls -la /tmp/godot-editor/
+          /tmp/godot-editor/godot --version || true
 
       - name: Import project
         run: |
@@ -41,7 +46,6 @@ jobs:
         run: |
           mkdir -p releases
           /tmp/godot-editor/godot --headless --export-release "Linux" releases/xr-grid.x86_64 2>&1 || \
-            echo "Export failed or no Linux preset; trying default" && \
             /tmp/godot-editor/godot --headless --export-release "" releases/xr-grid 2>&1 || true
           ls -lh releases/
 
