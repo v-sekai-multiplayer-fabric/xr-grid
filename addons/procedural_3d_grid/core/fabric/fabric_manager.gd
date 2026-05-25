@@ -15,35 +15,34 @@ var hlc_counter: int = 0
 func _ready() -> void:
 	print("FabricManager: autoload ready")
 
-var _enet: ENetMultiplayerPeer = null
+var _peer: WebTransportPeer = null
 
 func connect_to_zone(address: String, port: int) -> void:
-	_enet = ENetMultiplayerPeer.new()
-	var err := _enet.create_client(address, port)
+	_peer = WebTransportPeer.new()
+	var err := _peer.create_client(address, port, "/wt")
 	if err != OK:
-		push_error("ENet create_client failed: %d" % err)
+		push_error("WebTransport create_client failed: %d" % err)
 		state = State.DISCONNECTED
 		return
 	state = State.CONNECTING
 	connection_state_changed.emit(state)
-	print("FabricManager: connecting to %s:%d" % [address, port])
+	print("FabricManager: connecting to %s:%d/wt (WebTransport)" % [address, port])
 
 func send_entity(packet: PackedByteArray) -> void:
-	if _enet == null or state != State.CONNECTED:
+	if _peer == null or state != State.CONNECTED:
 		return
-	_enet.set_target_peer(0)
-	_enet.set_transfer_channel(0)
-	_enet.set_transfer_mode(MultiplayerPeer.TRANSFER_MODE_UNRELIABLE)
-	_enet.put_packet(packet)
+	_peer.set_target_peer(0)
+	_peer.set_transfer_mode(MultiplayerPeer.TRANSFER_MODE_UNRELIABLE)
+	_peer.put_packet(packet)
 
 func _process(_delta: float) -> void:
-	if _enet == null:
+	if _peer == null:
 		return
-	_enet.poll()
+	_peer.poll()
 	if state == State.CONNECTING:
-		var status: int = _enet.get_connection_status()
+		var status: int = _peer.get_connection_status()
 		if status == MultiplayerPeer.CONNECTION_CONNECTED:
-			local_player_id = _enet.get_unique_id()
+			local_player_id = _peer.get_unique_id()
 			state = State.CONNECTED
 			connection_state_changed.emit(state)
 			print("FabricManager: connected (player_id=%d)" % local_player_id)
@@ -51,8 +50,8 @@ func _process(_delta: float) -> void:
 		return
 	frame_counter += 1
 	hlc_counter = 0
-	while _enet.get_available_packet_count() > 0:
-		var pkt: PackedByteArray = _enet.get_packet()
+	while _peer.get_available_packet_count() > 0:
+		var pkt: PackedByteArray = _peer.get_packet()
 		if pkt.size() == 100:
 			entity_received.emit(pkt)
 			if frame_counter % 300 == 0:
