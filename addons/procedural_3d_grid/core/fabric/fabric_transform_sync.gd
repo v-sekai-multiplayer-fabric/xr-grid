@@ -11,6 +11,7 @@ extends Node
 var _target: Node3D = null
 var _global_id: int = 0
 var _send_timer: float = 0.0
+var _send_count: int = 0
 
 func _ready() -> void:
 	_target = get_parent() as Node3D
@@ -41,6 +42,9 @@ func _process(delta: float) -> void:
 		sub_index)
 	mgr.hlc_counter += 1
 	mgr.send_entity(pkt)
+	_send_count += 1
+	if _send_count == 1 or _send_count % 300 == 0:
+		print("FabricTransformSync[%d]: sent %d (pos=%s)" % [sub_index, _send_count, str(t.origin)])
 
 func apply_remote(decoded: Dictionary) -> void:
 	if _target == null:
