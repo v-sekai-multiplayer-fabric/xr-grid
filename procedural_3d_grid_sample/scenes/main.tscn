@@ -1,4 +1,4 @@
-[gd_scene load_steps=41 format=3 uid="uid://bg6gj8x7d3mrl"]
+[gd_scene load_steps=44 format=3 uid="uid://bg6gj8x7d3mrl"]
 
 [ext_resource type="Script" uid="uid://bhgqer41udrla" path="res://addons/procedural_3d_grid/core/hand.gd" id="2_bpl2v"]
 [ext_resource type="Shader" uid="uid://nqhuvjyl5bf4" path="res://addons/GPUTrail-main/shaders/trail.gdshader" id="2_rl0re"]
@@ -12,6 +12,8 @@
 [ext_resource type="Script" uid="uid://18xcph2o0pci" path="res://addons/procedural_3d_grid/core/follow_test.gd" id="8_uwiqs"]
 [ext_resource type="Shader" uid="uid://b2cjphncghsi8" path="res://addons/procedural_3d_grid/core/simple_sketcher/simple_sketch_shadow.gdshader" id="10_pydft"]
 [ext_resource type="PackedScene" uid="uid://cccdflexw520e" path="res://procedural_3d_grid_sample/art/sophia/sophia.glb" id="11_6yesq"]
+[ext_resource type="Script" path="res://addons/procedural_3d_grid/core/fabric/fabric_transform_sync.gd" id="12_fabric_sync"]
+[ext_resource type="Script" path="res://addons/procedural_3d_grid/core/fabric/remote_player_manager.gd" id="13_remote_mgr"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hf7ak"]
 shading_mode = 0
@@ -354,3 +356,27 @@ environment = SubResource("Environment_6juhc")
 
 [node name="sophia" parent="canvas" instance=ExtResource("11_6yesq")]
 transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, 0)
+
+[node name="HeadSync" type="Node" parent="XROrigin3D/XRCamera3D"]
+script = ExtResource("12_fabric_sync")
+entity_class = 1
+sub_index = 0
+send_rate_hz = 30.0
+is_local = true
+
+[node name="LeftHandSync" type="Node" parent="XROrigin3D/hand_left"]
+script = ExtResource("12_fabric_sync")
+entity_class = 1
+sub_index = 1
+send_rate_hz = 30.0
+is_local = true
+
+[node name="RightHandSync" type="Node" parent="XROrigin3D/hand_right"]
+script = ExtResource("12_fabric_sync")
+entity_class = 1
+sub_index = 2
+send_rate_hz = 30.0
+is_local = true
+
+[node name="RemotePlayerManager" type="Node" parent="."]
+script = ExtResource("13_remote_mgr")

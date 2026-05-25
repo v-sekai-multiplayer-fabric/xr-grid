@@ -10,13 +10,19 @@ var vr_supported: bool = false
 
 
 func _ready() -> void:
-	# Find our interface and check if it was successfully initialised.
-	# Note that Godot should initialise this automatically IF you've
-	# enabled it in project settings!
 	interface = XRServer.find_interface("OpenXR")
 	if interface and interface.is_initialized():
 		print_verbose("OpenXR initialised successfully")
-
 		var vp: Viewport = get_viewport()
 		vp.use_xr = true
 		print_verbose(vp.size)
+	var args := OS.get_cmdline_args()
+	var zone_addr := "127.0.0.1"
+	var zone_port := 9000
+	for arg in args:
+		if arg.begins_with("--fabric-server="):
+			var parts := arg.split("=", true, 1)[1].split(":")
+			zone_addr = parts[0]
+			if parts.size() > 1:
+				zone_port = parts[1].to_int()
+	FabricManager.connect_to_zone(zone_addr, zone_port)
