@@ -35,8 +35,10 @@ func _on_entity_received(packet: PackedByteArray) -> void:
 	var offset: int = gid - EntityPacket.PLAYER_ENTITY_BASE
 	var remote_pid: int = offset / 3
 	var mgr: Node = get_node_or_null("/root/FabricManager")
-	if mgr and remote_pid == mgr.local_player_id:
-		return
+	if mgr:
+		var local_safe: int = mgr.local_player_id % EntityPacket.MAX_PLAYER_ID
+		if remote_pid == local_safe:
+			return
 	_last_seen[remote_pid] = Time.get_ticks_msec() / 1000.0
 	if not _players.has(remote_pid):
 		var rp := RemotePlayer.new()
@@ -44,4 +46,5 @@ func _on_entity_received(packet: PackedByteArray) -> void:
 		rp.name = "RemotePlayer_%d" % remote_pid
 		add_child(rp)
 		_players[remote_pid] = rp
+		print("RemotePlayerManager: spawned player %d (gid=%d pos=%s)" % [remote_pid, gid, str(decoded["position"])])
 	_players[remote_pid].apply_packet(decoded)

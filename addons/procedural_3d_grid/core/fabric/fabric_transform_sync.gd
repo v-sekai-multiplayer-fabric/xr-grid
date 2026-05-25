@@ -28,7 +28,8 @@ func _process(delta: float) -> void:
 	if _send_timer < interval:
 		return
 	_send_timer -= interval
-	_global_id = EntityPacket.PLAYER_ENTITY_BASE + mgr.local_player_id * 3 + sub_index
+	var pid_safe: int = mgr.local_player_id % EntityPacket.MAX_PLAYER_ID
+	_global_id = EntityPacket.PLAYER_ENTITY_BASE + pid_safe * 3 + sub_index
 	var t: Transform3D = _target.global_transform
 	var pkt: PackedByteArray = EntityPacket.encode(
 		_global_id,

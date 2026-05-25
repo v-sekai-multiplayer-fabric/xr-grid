@@ -6,6 +6,7 @@ extends RefCounted
 const PACKET_SIZE := 100
 const PLAYER_ENTITY_BASE := 2_000_000
 const STROKE_ENTITY_BASE := 1_000_000
+const MAX_PLAYER_ID := 700_000_000
 
 static func encode(
 	global_id: int,

@@ -5,7 +5,8 @@ extends Node3D
 
 var remote_player_id: int = 0
 var _syncs: Array[FabricTransformSync] = []
-var _orbs: Array[OrientationOrb] = []
+const OrientationOrbScript = preload("res://addons/procedural_3d_grid/core/fabric/orientation_orb.gd")
+var _orbs: Array = []
 
 func _ready() -> void:
 	var color: Color = _color_from_id(remote_player_id)
@@ -13,7 +14,7 @@ func _ready() -> void:
 		var part := Node3D.new()
 		part.name = ["head", "hand_left", "hand_right"][i]
 		add_child(part)
-		var orb := OrientationOrb.new()
+		var orb: Node3D = OrientationOrbScript.new()
 		orb.setup(color if i > 0 else color.darkened(0.3))
 		part.add_child(orb)
 		_orbs.append(orb)
@@ -28,8 +29,8 @@ func apply_packet(decoded: Dictionary) -> void:
 	var si: int = decoded["sub_index"]
 	if si >= 0 and si < _syncs.size():
 		_syncs[si].apply_remote(decoded)
-		_orbs[si].update_from_basis(decoded["rotation"] as Quaternion * Basis.IDENTITY)
+		_orbs[si].update_from_basis(Basis(decoded["rotation"]))
 
 static func _color_from_id(pid: int) -> Color:
 	var hue: float = fmod(pid * 0.618033988749895, 1.0)
-	return Color.from_hsv(hue, 0.7, 0.9)
+	return Color.from_ok_hsl(hue, 0.8, 0.7)

@@ -58,13 +58,13 @@ func update_from_basis(b: Basis) -> void:
 		return
 	_spheres[0].position = Vector3.ZERO
 	for axis in 3:
-		var col: Vector3 = b.get_column(axis) * AXIS_RADIUS
+		var col: Vector3 = b[axis] * AXIS_RADIUS
 		_spheres[1 + axis * 2].position = col
 		_spheres[2 + axis * 2].position = -col
 	# Rebuild axis lines
 	var im := ImmediateMesh.new()
 	for axis in 3:
-		var col: Vector3 = b.get_column(axis) * AXIS_RADIUS
+		var col: Vector3 = b[axis] * AXIS_RADIUS
 		im.surface_begin(Mesh.PRIMITIVE_LINES)
 		im.surface_add_vertex(-col)
 		im.surface_add_vertex(col)
