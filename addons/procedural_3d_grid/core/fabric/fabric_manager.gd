@@ -16,10 +16,25 @@ var local_player_id: int = 0
 var frame_counter: int = 0
 var hlc_counter: int = 0
 
+func _ready() -> void:
+	print("FabricManager: autoload ready")
+
+func _make_enet_client(host: String, port: int) -> MultiplayerPeer:
+	var p := ENetMultiplayerPeer.new()
+	p.create_client(host, port)
+	return p
+
+func _make_enet_server(port: int) -> MultiplayerPeer:
+	var p := ENetMultiplayerPeer.new()
+	p.create_server(port)
+	return p
+
 func connect_to_zone(address: String, port: int) -> void:
 	if peer != null:
 		peer = null
 	peer = FabricMultiplayerPeer.new()
+	peer.client_factory = _make_enet_client
+	peer.server_factory = _make_enet_server
 	var err := peer.create_client(address, port)
 	if err != OK:
 		push_error("FabricMultiplayerPeer.create_client failed: %d" % err)
@@ -29,11 +44,13 @@ func connect_to_zone(address: String, port: int) -> void:
 	connection_state_changed.emit(state)
 	print("FabricManager: connecting to %s:%d" % [address, port])
 
-func host_zone(port: int, max_clients: int = 32) -> void:
+func host_zone(port: int) -> void:
 	if peer != null:
 		peer = null
 	peer = FabricMultiplayerPeer.new()
-	var err := peer.create_server(port, max_clients)
+	peer.client_factory = _make_enet_client
+	peer.server_factory = _make_enet_server
+	var err := peer.create_server(port)
 	if err != OK:
 		push_error("FabricMultiplayerPeer.create_server failed: %d" % err)
 		state = State.DISCONNECTED
@@ -48,13 +65,17 @@ func send_entity(packet: PackedByteArray) -> void:
 		return
 	peer.broadcast_to_zones(CH_INTEREST, packet)
 
-func _process(_delta: float) -> void:
+var _connect_elapsed: float = 0.0
+const _CONNECT_GRACE_SEC := 1.0
+
+func _process(delta: float) -> void:
 	if peer == null:
 		return
+	peer.poll()
 	if state == State.CONNECTING:
-		var peer_id: int = peer.get_unique_id()
-		if peer_id > 0 and peer_id != 1:
-			local_player_id = peer_id
+		_connect_elapsed += delta
+		if _connect_elapsed >= _CONNECT_GRACE_SEC:
+			local_player_id = randi_range(100, 999999)
 			state = State.CONNECTED
 			connection_state_changed.emit(state)
 			print("FabricManager: connected (player_id=%d)" % local_player_id)
