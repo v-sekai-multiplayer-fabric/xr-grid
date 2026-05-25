@@ -25,4 +25,6 @@ func _ready() -> void:
 			zone_addr = parts[0]
 			if parts.size() > 1:
 				zone_port = parts[1].to_int()
-	FabricManager.connect_to_zone(zone_addr, zone_port)
+	var fm: Node = get_node_or_null("/root/FabricManager")
+	if fm:
+		fm.connect_to_zone(zone_addr, zone_port)
