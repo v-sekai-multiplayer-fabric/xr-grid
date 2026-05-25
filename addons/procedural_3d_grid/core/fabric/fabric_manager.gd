@@ -84,5 +84,7 @@ func _process(delta: float) -> void:
 	frame_counter += 1
 	hlc_counter = 0
 	var packets: Array = peer.drain_channel(CH_INTEREST)
+	if packets.size() > 0 and frame_counter % 300 == 0:
+		print("FabricManager: received %d packets (frame %d)" % [packets.size(), frame_counter])
 	for pkt: PackedByteArray in packets:
 		entity_received.emit(pkt)
