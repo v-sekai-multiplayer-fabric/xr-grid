@@ -83,7 +83,10 @@ func _process(delta: float) -> void:
 		right = right.normalized()
 		origin.position += (forward * -move_dir.z + right * move_dir.x) * MOVE_SPEED * delta
 	# Position hands relative to camera
+	var head_pos := origin.position + Vector3(0, 1.7, 0)
 	if _hand_l:
-		_hand_l.transform = Transform3D(cam_basis, cam_basis * HAND_OFFSET_L + Vector3(0, 1.7, 0))
+		_hand_l.global_transform = Transform3D(cam_basis, head_pos + cam_basis * HAND_OFFSET_L)
 	if _hand_r:
-		_hand_r.transform = Transform3D(cam_basis, cam_basis * HAND_OFFSET_R + Vector3(0, 1.7, 0))
+		_hand_r.global_transform = Transform3D(cam_basis, head_pos + cam_basis * HAND_OFFSET_R)
+	if _cam:
+		_cam.global_transform = Transform3D(cam_basis, head_pos)
