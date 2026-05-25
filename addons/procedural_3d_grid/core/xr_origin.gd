@@ -12,10 +12,11 @@ var vr_supported: bool = false
 func _ready() -> void:
 	interface = XRServer.find_interface("OpenXR")
 	if interface and interface.is_initialized():
-		print_verbose("OpenXR initialised successfully")
+		print("OpenXR initialised successfully")
 		var vp: Viewport = get_viewport()
 		vp.use_xr = true
-		print_verbose(vp.size)
+	else:
+		print("OpenXR not available, using flatscreen mode")
 	var args := OS.get_cmdline_args()
 	var zone_addr := "127.0.0.1"
 	var zone_port := 9000

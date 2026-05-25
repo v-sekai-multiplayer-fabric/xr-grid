@@ -1,4 +1,4 @@
-[gd_scene load_steps=44 format=3 uid="uid://bg6gj8x7d3mrl"]
+[gd_scene load_steps=45 format=3 uid="uid://bg6gj8x7d3mrl"]
 
 [ext_resource type="Script" uid="uid://bhgqer41udrla" path="res://addons/procedural_3d_grid/core/hand.gd" id="2_bpl2v"]
 [ext_resource type="Shader" uid="uid://nqhuvjyl5bf4" path="res://addons/GPUTrail-main/shaders/trail.gdshader" id="2_rl0re"]
@@ -13,6 +13,7 @@
 [ext_resource type="Shader" uid="uid://b2cjphncghsi8" path="res://addons/procedural_3d_grid/core/simple_sketcher/simple_sketch_shadow.gdshader" id="10_pydft"]
 [ext_resource type="PackedScene" uid="uid://cccdflexw520e" path="res://procedural_3d_grid_sample/art/sophia/sophia.glb" id="11_6yesq"]
 [ext_resource type="Script" path="res://addons/procedural_3d_grid/core/fabric/fabric_transform_sync.gd" id="12_fabric_sync"]
+[ext_resource type="Script" path="res://addons/procedural_3d_grid/core/flatscreen_controller.gd" id="14_flatscreen"]
 [ext_resource type="Script" path="res://addons/procedural_3d_grid/core/fabric/remote_player_manager.gd" id="13_remote_mgr"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hf7ak"]
@@ -356,6 +357,9 @@ environment = SubResource("Environment_6juhc")
 
 [node name="sophia" parent="canvas" instance=ExtResource("11_6yesq")]
 transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, 0)
+
+[node name="FlatscreenController" type="Node" parent="XROrigin3D"]
+script = ExtResource("14_flatscreen")
 
 [node name="HeadSync" type="Node" parent="XROrigin3D/XRCamera3D"]
 script = ExtResource("12_fabric_sync")
